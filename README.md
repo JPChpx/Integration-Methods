@@ -1,5 +1,5 @@
 # function integrals with various Methods
-Provide stand-alone integration methods from order 1 to order 10.
+Provides function integration methods from 1 to 10th order
 Simple, easy-to-use library: simply add ".\integration.h" to your main program.
 
 Implemented methods are :
