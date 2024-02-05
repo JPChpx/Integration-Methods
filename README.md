@@ -1,4 +1,4 @@
-# Integration-Methods
+# function integrals with various Methods
 Provide stand-alone integration methods from order 1 to order 10.
 Simple, easy-to-use library: simply add ".\integration.h" to your main program.
 
