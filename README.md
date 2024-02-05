@@ -17,6 +17,3 @@ Implemented methods are :
 
 main.cpp gives examples of use...
 Nb: the library is not fully optimized and can be improved.
-
-
-Translated with DeepL.com (free version)
