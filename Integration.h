@@ -26,122 +26,122 @@
 #include <iomanip>
 #include <cmath>
 #include <ctime>
-#include <bits/stdc++.h>
-
-using namespace std;
-
+#include <vector>
+#include <functional>
+#include <algorithm>
 
 /// ------------------------
 /// STD integration function
 /// ------------------------
 template<typename Method, typename F, typename Float>
-double Std_integrate(F f, Float a, Float b, size_t steps,Method m)
+inline double Std_integrate(F f, Float a, Float b, size_t steps, const Method& m)
 {
-    double s = 0;
-    double h = (b-a)/steps;
-    for (int i = 0; i < steps; ++i) s +=m(f, a + h*i, h);
-    return h*s;
-};
+    double sum = 0.0;
+    const double h = (b - a) / steps;
+    for (size_t i = 0; i < steps; ++i)
+        sum += m(f, a + h * i, h);
+    return h * sum;
+}
 
 /// -------------------------------------------
 /// IMPLEMENTED INTEGRATION METHODES
-/// 1er -> 10th order
 /// -------------------------------------------
 
-class rectangular
-{
+class rectangular {
 public:
     enum position_type { left, middle, right };
-    rectangular(position_type pos): position(pos) {}
+    explicit rectangular(position_type pos) : position(pos) {}
+
     template<typename F, typename Float>
-    double operator()(F f, Float x, Float h) const
-    {
-        switch(position)
-        {
-        case left:
-            return f( x );
-        case middle:
-            return f( x+h/2.);
-        case right:
-            return f( x+h );
+    inline double operator()(F f, Float x, Float h) const {
+        switch (position) {
+            case left: return f(x);
+            case middle: return f(x + h / 2.0);
+            case right: return f(x + h);
         }
+        return 0.0; // fallback
     }
 private:
     const position_type position;
 };
 
-class trapezium
-{
+class trapezium {
 public:
     template<typename F, typename Float>
-    double operator()(F f, Float x, Float h) const
-    {
-        return (f( x ) + f( x+h ))/2.;
+    inline double operator()(F f, Float x, Float h) const {
+        return (f(x) + f(x + h)) / 2.0;
     }
 };
 
-class simpson
-{
+class simpson {
 public:
     template<typename F, typename Float>
-    double operator()(F f, Float x, Float h) const
-    {
-        return (f(x) + 4.*f(x+h/2) + f(x+h))/6.;
+    inline double operator()(F f, Float x, Float h) const {
+        return (f(x) + 4.0 * f(x + h / 2.0) + f(x + h)) / 6.0;
     }
 };
 
-class simpson_3_8
-{
+class simpson_3_8 {
 public:
     template<typename F, typename Float>
-    double operator()(F f, Float x, Float h) const
-    {
-        return (f( x ) + 3.*f( x + h/3. ) + 3*f( x + 2.*h/3. ) + f( x + h ))/8.;
+    inline double operator()(F f, Float x, Float h) const {
+        return (f(x) + 3.0 * f(x + h / 3.0) + 3.0 * f(x + 2.0 * h / 3.0) + f(x + h)) / 8.0;
     }
-
 };
 
-class Bode
-{
+class Bode {
 public:
     template<typename F, typename Float>
-    double operator()(F f, Float x, Float h) const
-    {
-        return ( (14.)*f(x) + (64.)*f(x+h/4.) + (24.)*f(x+2.*h/4.) + (64.)*f(x+3*h/4.) + (14.)*f(x+h) )/(4.*45.);
+    inline double operator()(F f, Float x, Float h) const {
+        return (14.0 * f(x) + 64.0 * f(x + h / 4.0) + 24.0 * f(x + h / 2.0) +
+                64.0 * f(x + 3.0 * h / 4.0) + 14.0 * f(x + h)) / (4.0 * 45.0);
     }
-
 };
 
-class Weddle
-{
+class Weddle {
 public:
     template<typename F, typename Float>
-    double operator()(F f, Float x, Float h) const
-    {
-        return ( (41.)*f(x) + (216.)*f(x+h/6.) + (27.)*f(x+2.*h/6.) + (272.)*f(x+3*h/6.) + (27.)*f(x+4.*h/6.) + (216)*f(x+5.*h/6.) + 41.*f(x+h) )/(840.);
+    inline double operator()(F f, Float x, Float h) const {
+        return (41.0 * f(x) + 216.0 * f(x + h / 6.0) + 27.0 * f(x + h / 3.0) +
+                272.0 * f(x + h / 2.0) + 27.0 * f(x + 2.0 * h / 3.0) +
+                216.0 * f(x + 5.0 * h / 6.0) + 41.0 * f(x + h)) / 840.0;
     }
-
 };
 
-class HighOrder
-{
+class HighOrder {
 public:
     enum position_type { _7th, _8th, _9th, _10th };
-    HighOrder(position_type pos): position(pos) {}
+    explicit HighOrder(position_type pos) : position(pos) {}
+
     template<typename F, typename Float>
-    double operator()(F f, Float x, Float h) const
-    {
-        switch(position)
-        {
-        case _7th:
-            return (1./17280.)*(751.*(f(x)+f(x+h)) + 3577.*(f(x+h/7.)+f(x+6.*h/7.)) + 1323.*(f(x+2.*h/7.)+f(x+5.*h/7.)) + 2989.*(f(x+3*h/7.)+f(x+4.*h/7)) );
-        case _8th:
-            return (1./28350.)*(989.*(f(x)+f(x+h)) + 5888.*(f(x+h/8.)+f(x+7.*h/8.)) - 928.*(f(x+2.*h/8.)+f(x+6.*h/8.)) + 10496.*(f(x+3.*h/8.)+f(x+5.*h/8.)) - 4540*f(x+4.*h/8.));
-        case _9th:
-            return (1./89600.)*(2857.*(f(x)+f(x+h)) + 15741*(f(x+h/9.)+f(x+8.*h/9.)) + 1080*(f(x+2.*h/9.)+f(x+7.*h/9.)) + 19344.*(f(x+3.*h/9.)+f(x+6.*h/9.)) + 5778*((f(x+4.*h/9.)+f(x+5*h/9)))  );
-        case _10th:
-            return (1./598752.)*(16067.*(f(x)+f(x+h)) + 106300*(f(x+h/10.)+f(x+9.*h/10)) - 48525.*(f(x+2*h/10.)+f(x+8*h/10)) + 272400.*(f(x+3.*h/10.)+f(x+7.*h/10.)) - 260550.*(f(x+4.*h/10.)+f(x+6.*h/10.)) + 427368*f(x+5.*h/10.)  )    ;
+    inline double operator()(F f, Float x, Float h) const {
+        switch (position) {
+            case _7th:
+                return (1.0 / 17280.0) * (751.0 * (f(x) + f(x + h)) +
+                    3577.0 * (f(x + h / 7.0) + f(x + 6.0 * h / 7.0)) +
+                    1323.0 * (f(x + 2.0 * h / 7.0) + f(x + 5.0 * h / 7.0)) +
+                    2989.0 * (f(x + 3.0 * h / 7.0) + f(x + 4.0 * h / 7.0)));
+            case _8th:
+                return (1.0 / 28350.0) * (989.0 * (f(x) + f(x + h)) +
+                    5888.0 * (f(x + h / 8.0) + f(x + 7.0 * h / 8.0)) -
+                    928.0 * (f(x + 2.0 * h / 8.0) + f(x + 6.0 * h / 8.0)) +
+                    10496.0 * (f(x + 3.0 * h / 8.0) + f(x + 5.0 * h / 8.0)) -
+                    4540.0 * f(x + 4.0 * h / 8.0));
+            case _9th:
+                return (1.0 / 89600.0) * (2857.0 * (f(x) + f(x + h)) +
+                    15741.0 * (f(x + h / 9.0) + f(x + 8.0 * h / 9.0)) +
+                    1080.0 * (f(x + 2.0 * h / 9.0) + f(x + 7.0 * h / 9.0)) +
+                    19344.0 * (f(x + 3.0 * h / 9.0) + f(x + 6.0 * h / 9.0)) +
+                    5778.0 * (f(x + 4.0 * h / 9.0) + f(x + 5.0 * h / 9.0)));
+            case _10th:
+                return (1.0 / 598752.0) * (16067.0 * (f(x) + f(x + h)) +
+                    106300.0 * (f(x + h / 10.0) + f(x + 9.0 * h / 10.0)) -
+                    48525.0 * (f(x + 2.0 * h / 10.0) + f(x + 8.0 * h / 10.0)) +
+                    272400.0 * (f(x + 3.0 * h / 10.0) + f(x + 7.0 * h / 10.0)) -
+                    260550.0 * (f(x + 4.0 * h / 10.0) + f(x + 6.0 * h / 10.0)) +
+                    427368.0 * f(x + 5.0 * h / 10.0));
         }
+        return 0.0;
     }
 private:
     const position_type position;
@@ -151,174 +151,65 @@ private:
 /// Romberg integration
 /// ---------------------------------
 template<typename F, typename Float>
-double Romberg_integrate (F f, Float a, Float b,size_t max_steps, float acc)
+double Romberg_integrate(F f, Float a, Float b, size_t max_steps, double acc)
 {
-    double R1[max_steps], R2[max_steps];
-    double *Rp = &R1[0];
-    double *Rc = &R2[0];
-    double h = (b-a);
-    Rp[0] = (f(a) + f(b))*h*.5;
-    for(size_t i = 1; i < max_steps; ++i)
+    std::vector<double> R1(max_steps), R2(max_steps);
+    double* Rp = R1.data();
+    double* Rc = R2.data();
+    double h = b - a;
+    Rp[0] = 0.5 * h * (f(a) + f(b));
+
+    for (size_t i = 1; i < max_steps; ++i)
     {
-        h /= 2.;
-        double c = 0;
-        size_t ep = 1 << (i-1);
-        for(size_t j = 1; j <= ep; ++j)
-        {
-            c += f(a+(2*j-1)*h);
-        }
-        Rc[0] = h*c + .5*Rp[0];
+        h *= 0.5;
+        double sum = 0.0;
+        size_t ep = 1 << (i - 1);
+        for (size_t j = 1; j <= ep; ++j)
+            sum += f(a + (2 * j - 1) * h);
 
-        for(size_t j = 1; j <= i; ++j)
+        Rc[0] = h * sum + 0.5 * Rp[0];
+        for (size_t j = 1; j <= i; ++j)
         {
-            double n_k = pow(4, j);
-            Rc[j] = (n_k*Rc[j-1] - Rp[j-1])/(n_k-1);
+            double n_k = std::pow(4.0, j);
+            Rc[j] = (n_k * Rc[j - 1] - Rp[j - 1]) / (n_k - 1.0);
         }
 
-        if(i > 1 && fabs(Rp[i-1]-Rc[i]) < acc)
-        {
-            return Rc[i-1];
-        }
-        double *rt = Rp;
-        Rp = Rc;
-        Rc = rt;
-    }
-    return Rp[max_steps-1];
-};
+        if (i > 1 && std::abs(Rp[i - 1] - Rc[i]) < acc)
+            return Rc[i];
 
-/// ----------------------------
-/// MontheCarlo integration nD;
-/// ----------------------------
-double MC_integrate(double(*f) (vector<double>), vector<double> a, vector<double> b, double prec,size_t max_steps)
-{
-
-    default_random_engine gene;
-    uniform_real_distribution<double> distri(0,1);
-
-    double I=0.0;
-    double p=1.0;
-    int m=1;
-
-    vector<double> X(a.size());
-    for(unsigned int i=0; i<a.size(); i++) p=p*(b[i]-a[i]);
-
-    while(1)
-    {
-        m++;
-        for(int i=0; i<a.size(); i++)
-        {
-            X[i]=a[i]+(b[i]-a[i])*distri(gene);   // génére les x,y,z dans les intervales a,b
-        }
-        I+=f(X)*p;
-        if(m>=max_steps) break;
-    }
-    return I*p/m;
-};
-
-///------------------------------------------------------------
-/// Double integration by Simpson 1/3 rule for DATA I_i(xi,yj)
-///------------------------------------------------------------
-double Simpson_2D(vector< vector<double> > Datas, double step_x, double step_y)
-{
-    int nx=Datas.size();
-    int ny=Datas[0].size();
-    //  cout<<nx<<" "<<ny<<endl;
-    double h=step_x ;
-    double k=step_y ;
-    vector<double> ax ;
-    ax.resize(nx);
-
-    for (int i = 0; i < nx; ++i)
-    {
-        ax[i] = 0;
-        for (int j = 0; j < ny; ++j)
-        {
-            if (j == 0 || j == ny - 1)
-                ax[i] += Datas[i][j];
-            else if (j % 2 == 0)
-                ax[i] += 2. * Datas[i][j];
-            else
-                ax[i] += 4. * Datas[i][j];
-        }
-        ax[i] *= (k / 3.);
+        std::swap(Rp, Rc);
     }
 
-    double answer = 0;
-
-    for (int i = 0; i < nx; ++i)
-    {
-        if (i == 0 || i == nx - 1)
-            answer += ax[i];
-        else if (i % 2 == 0)
-            answer += 2. * ax[i];
-        else
-            answer += 4. * ax[i];
-    }
-    answer *= (h / 3.);
-
-    return answer;
-
+    return Rp[max_steps - 1];
 }
 
-/// --------------------------------------------------------------
-/// Double integration by Simpson 1/3 rule for continuous f(x,y)
-/// --------------------------------------------------------------
-
-double Simpson_2D(double(*f)(double x, double y), double h, double k, double lx, double ux, double ly, double uy)
+/// ----------------------------
+/// Monte Carlo integration nD
+/// ----------------------------
+double MC_integrate(const std::function<double(const std::vector<double>&)>& f,
+                    const std::vector<double>& a, const std::vector<double>& b,
+                    double /*prec*/, size_t max_steps)
 {
-    int nx, ny;
-    double answer;
+    std::default_random_engine gen;
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
 
-    // number of points
+    const size_t dim = a.size();
+    std::vector<double> X(dim);
+    double volume = 1.0;
 
-    nx=(ux-lx)/h+1;
-    ny=(uy-ly)/k+1;
+    for (size_t i = 0; i < dim; ++i)
+        volume *= (b[i] - a[i]);
 
-    // Generate Grid of values
-
-    vector< vector<double> > z(nx, vector<double>(ny));
-    vector<double> ax ;
-    ax.resize(nx);
-
-    for (int i = 0; i < nx; ++i)
+    double sum = 0.0;
+    for (size_t m = 0; m < max_steps; ++m)
     {
-        for (int j = 0; j < ny; ++j)
-        {
-            z[i][j]=( f(lx + i * h, ly + j * k) );
-        }
+        for (size_t i = 0; i < dim; ++i)
+            X[i] = a[i] + (b[i] - a[i]) * dist(gen);
+        sum += f(X);
     }
 
-    for (int i = 0; i < nx; ++i)
-    {
-        ax[i] = 0;
-        for (int j = 0; j < ny; ++j)
-        {
-            if (j == 0 || j == ny - 1)
-                ax[i] += z[i][j];
-            else if (j % 2 == 0)
-                ax[i] += 2. * z[i][j];
-            else
-                ax[i] += 4. * z[i][j];
-        }
-        ax[i] *= (k / 3.);
-    }
-
-    answer = 0;
-
-    for (int i = 0; i < nx; ++i)
-    {
-        if (i == 0 || i == nx - 1)
-            answer += ax[i];
-        else if (i % 2 == 0)
-            answer += 2. * ax[i];
-        else
-            answer += 4. * ax[i];
-    }
-    answer *= (h / 3.);
-
-    return answer;
-
-};
-
+    return (sum / max_steps) * volume;
+}
 
 #endif // INTEGRATION_H_INCLUDED
+
