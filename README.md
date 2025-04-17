@@ -1,4 +1,5 @@
  # 🧮 Numerical Integration Library
+![C++](https://img.shields.io/badge/C%2B%2B-17-blue) ![Status](https://img.shields.io/badge/status-stable-green) ![Version](https://img.shields.io/badge/version-1.0.0-blueviolet)
 
 A lightweight and powerful C++ library for numerical integration methods. Developed by JP Champeaux (2019), this library includes a variety of 1D, 2D, and nD integration algorithms — from classical rules like Trapezoidal and Simpson, to advanced techniques like Romberg and Monte Carlo.
 
